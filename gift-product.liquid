@@ -1,0 +1,62 @@
+<div id="isagift" data-value="{% if cart.total_price > 49999 %}true{% else %}false{% endif %}"></div>
+
+{% assign id = all_products['gratis-oreringe-v-kob-over-500kr'].selected_or_first_available_variant.id %}
+{% assign gift_wraps_in_cart = 0 %}
+{% for item in cart.items %}
+  {% if item.id == id %}
+    {% assign itemkey = item.key %}
+    {% assign gift_wraps_in_cart = item.quantity %}
+  {% endif %}
+{% endfor %}
+
+<style>
+  input[id="updates_{{ itemkey }}"] { display: none !important; }
+</style>
+<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script src="//cdn.shopify.com/s/files/1/0658/8649/t/13/assets/api.js?v=2162383537470122680" type="text/javascript"></script>
+<script>
+
+Shopify.Cart = Shopify.Cart || {};
+
+Shopify.Cart.GiftWrap = {};
+
+Shopify.Cart.GiftWrap.set = function() {
+  jQuery.ajax({
+    type: 'POST',
+    url: '/cart/update.js', 
+    data: { updates: { {{ id }}: 1 }, attributes: { 'gift-wrapping': true } }, 
+    dataType: 'json',
+    success: function() { location.href = '/cart'; }
+  });
+}
+
+Shopify.Cart.GiftWrap.remove = function() {
+  jQuery.ajax({
+    type: 'POST',
+    url: '/cart/update.js', 
+    data: { updates: { {{ id }}: 0 }, attributes: { 'gift-wrapping': '' } }, 
+    dataType: 'json',
+    success: function() { location.href = '/cart'; }
+  });
+}
+
+{% if cart.total_price > 49999 and gift_wraps_in_cart < 1 %}
+jQuery(function() {
+  Shopify.Cart.GiftWrap.set();
+});
+{% elsif cart.total_price < 50000 and gift_wraps_in_cart > 0 %}
+jQuery(function() {
+  Shopify.Cart.GiftWrap.remove();
+});
+{% endif %}
+
+jQuery(function() {
+  jQuery('[name="updates[]"]').change(function() {
+    if (jQuery('#isagift').data('value') == true) {
+      Shopify.Cart.GiftWrap.set();    
+    } else {
+      Shopify.Cart.GiftWrap.remove();
+    }
+  });
+});
+</script>
